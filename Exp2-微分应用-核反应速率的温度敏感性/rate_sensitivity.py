@@ -7,33 +7,28 @@ def q3a(T):
     输入: T - 温度 (K)
     返回: 速率因子 (erg * cm^6 / (g^3 * s))
     """
-    # TODO: 在此实现3-α反应速率计算
-    # 提示：
-    # 将温度转换为以 10^8 K 为单位
-    T_8 = T / 1e8
-    # 处理温度为零的特殊情况
-    if T_8 == 0:
-        return 0
-    # 使用公式：q_{3α} = 5.09×10^11 ρ^2 Y^3 T_8^(-3) exp(-44.027/T_8)
-    return 5.09e11 * T_8**(-3) * np.exp(-44.027 / T_8)
+    T8 = T / 1.0e8  # 以 10^8 K 为单位的温度
+    # 避免 T8 过小导致除零或溢出错误 (虽然在此问题中 T 的范围较大，一般不会遇到)
+    if T8 <= 0:
+        return 0.0
+    rate_factor = 5.09e11 * T8**(-3.0) * np.exp(-44.027 / T8)
+    return rate_factor
 
-
+# (可选) 可视化
 def plot_rate(filename="rate_vs_temp.png"):
     """绘制速率因子随温度变化的 log-log 图"""
-    # 使用 np.logspace 生成温度数据点
-    T = np.logspace(7, 10, 100)
-    # 计算对应的速率值
-    rates = q3a(T)
-    # 使用 plt.loglog 绘制双对数图
-    plt.loglog(T, rates)
-    # 添加适当的标签和标题
-    plt.xlabel('Temperature (K)')
-    plt.ylabel('Rate factor (erg * cm^6 / (g^3 * s))')
-    plt.title('3 - alpha reaction rate factor vs Temperature')
-    plt.grid(True)
-    # 保存图片
-    plt.savefig(filename)
-    plt.show()
+    T_values = np.logspace(np.log10(3.0e8), np.log10(5.0e9), 100) # 温度范围 3e8 K to 5e9 K
+    q_values = [q3a(T) for T in T_values]
+
+    fig, ax = plt.subplots()
+    ax.loglog(T_values, q_values)
+    ax.set_xlabel("Temperature T (K)")
+    ax.set_ylabel(r"$q_{3\alpha}/(\rho^2 Y^3)$  (erg cm$^6$ g$^{-3}$ s$^{-1}$)")
+    ax.set_title("3-α Reaction Rate Factor vs Temperature")
+    ax.grid(True, which="both", ls=":") # show both major and minor grid lines
+    #plt.savefig(filename)
+    #print(f"图表已保存至 {filename}")
+    plt.show() # 如果希望在运行时显示图表，取消此行注释
 
 if __name__ == "__main__":
     # 计算并打印 nu 值
@@ -41,20 +36,24 @@ if __name__ == "__main__":
     print("--------------------------------------")
 
     temperatures_K = [1.0e8, 2.5e8, 5.0e8, 1.0e9, 2.5e9, 5.0e9]
-    h = 1.0e-8  # 扰动因子
+    h = 1.0e-8 # 扰动因子
 
-    for T in temperatures_K:
-        q = q3a(T)
-        q_perturbed = q3a(T * (1 + h))
-        # 处理 q = 0 的特殊情况
-        if q == 0:
-            nu = 0
+    for T0 in temperatures_K:
+        q_T0 = q3a(T0)
+        if q_T0 == 0: # 避免除以零
+            nu = np.nan # Not a Number
         else:
-            # 使用前向差分计算导数
-            dq_dT = (q_perturbed - q) / (T * h)
-            # 计算敏感性指数 nu
-            nu = (T / q) * dq_dT
-        print(f"{T:15.2e} : {nu:15.2e}")
+            delta_T = h * T0
+            q_T0_plus_deltaT = q3a(T0 + delta_T)
+            
+            # 使用前向差分计算 dq/dT
+            dq_dT_approx = (q_T0_plus_deltaT - q_T0) / delta_T
+            
+            # 计算 nu
+            nu = (T0 / q_T0) * dq_dT_approx
+            
+        # 格式化输出
+        print(f"  {T0:10.3e} K : {nu:8.3f}")
 
-    # 调用绘图函数展示结果
+    # (可选) 调用绘图函数
     plot_rate()
