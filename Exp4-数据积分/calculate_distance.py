@@ -7,7 +7,7 @@ import os
 
 def main():
     try:
-        data_file ="Exp4-数据积分/calculate_distance.py"  # 使用相对路径，确保文件与脚本同目录
+        data_file = "Exp4-数据积分/Velocities.txt"  # 使用相对路径，确保文件与脚本同目录
 
         # 2. 读取数据（假设数据有两列：时间 速度）
         t, v = np.loadtxt(data_file, unpack=True)  # 自动解包到时间列和速度列
