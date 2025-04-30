@@ -2,69 +2,69 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sympy import tanh, symbols, diff, lambdify
 
+
 def f(x):
     """计算函数值 f(x) = 1 + 0.5*tanh(2x)
-    
+
     参数：
         x: 标量或numpy数组，输入值
-    
+
     返回：
         标量或numpy数组，函数值
     """
-    # TODO: 实现函数 f(x) = 1 + 0.5*tanh(2x)
     return 1 + 0.5 * np.tanh(2 * x)
+
 
 def get_analytical_derivative():
     """使用sympy获取解析导数函数
-    
+
     返回：
         可调用函数，用于计算导数值
     """
-    # TODO: 使用sympy计算解析导数并返回可调用的函数
     x = symbols('x')
     expr = 1 + 0.5 * tanh(2 * x)
     derivative_expr = diff(expr, x)
     return lambdify(x, derivative_expr)
 
+
 def calculate_central_difference(x, f):
     """使用中心差分法计算数值导数
-    
+
     参数：
         x: numpy数组，要计算导数的点
         f: 可调用函数，要求导的函数
-    
+
     返回：
         numpy数组，x[1:-1]处的导数值
     """
-    # TODO: 实现中心差分法计算导数
     h = x[1] - x[0]
     return (f(x[2:]) - f(x[:-2])) / (2 * h)
 
+
 def richardson_derivative_all_orders(x, f, h, max_order=3):
     """使用Richardson外推法计算不同阶数的导数值
-    
+
     参数：
         x: 标量，要计算导数的点
         f: 可调用函数，要求导的函数
         h: 浮点数，初始步长
         max_order: 整数，最大外推阶数
-    
+
     返回：
         列表，不同阶数计算的导数值
     """
-    # TODO: 实现Richardson外推法计算不同阶数的导数值
     D = np.zeros((max_order, max_order))
     for i in range(max_order):
         D[i, 0] = (f(x + h / (2**i)) - f(x - h / (2**i))) / (2 * (h / (2**i)))
     for j in range(1, max_order):
         for i in range(max_order - j):
-            D[i, j] = D[i, j - 1] + (D[i, j - 1] - D[i + 1, j - 1]) / ((2**(2 * j)) - 1)
+            D[i, j] = (4**j * D[i, j - 1] - D[i + 1, j - 1]) / (4**j - 1)
     return [D[0, i] for i in range(max_order)]
 
 
 def create_comparison_plot(x, x_central, dy_central, dy_richardson, df_analytical):
     """创建对比图，展示导数计算结果和误差分析
-    
+
     参数：
         x: numpy数组，所有x坐标点
         x_central: numpy数组，中心差分法使用的x坐标点
@@ -74,8 +74,7 @@ def create_comparison_plot(x, x_central, dy_central, dy_richardson, df_analytica
     """
     # 创建四个子图
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 12))
-    
-    # TODO: 实现四个子图的绘制：
+
     # 1. 导数对比图
     ax1.plot(x, df_analytical(x), label='Analytical')
     ax1.plot(x_central, dy_central, label='Central Difference')
@@ -93,6 +92,7 @@ def create_comparison_plot(x, x_central, dy_central, dy_richardson, df_analytica
     ax2.set_ylabel('Error (log scale)')
     ax2.set_title('Error Analysis (Log Scale)')
     ax2.legend()
+
     # 3. Richardson外推不同阶数误差对比图（对数坐标）
     h_values = np.logspace(-3, 0, 20)
     order_errors = []
@@ -108,6 +108,7 @@ def create_comparison_plot(x, x_central, dy_central, dy_richardson, df_analytica
     ax3.set_ylabel('Error (log scale)')
     ax3.set_title('Richardson Extrapolation Error Comparison (Log Scale)')
     ax3.legend()
+
     # 4. 步长敏感性分析图（双对数坐标）
     h_values = np.logspace(-6, 0, 50)
     central_errors = []
@@ -121,26 +122,29 @@ def create_comparison_plot(x, x_central, dy_central, dy_richardson, df_analytica
     ax4.set_ylabel('Central Difference Error (log scale)')
     ax4.set_title('Step Size Sensitivity Analysis (Log-Log Scale)')
 
-    
-
     plt.tight_layout()
     plt.show()
 
+
 def main():
     """运行数值微分实验的主函数"""
-    # TODO: 设置实验参数
+    # 设置实验参数
     x = np.linspace(-2, 2, 100)
     h = 0.01
-    # TODO: 获取解析导数函数
+
+    # 获取解析导数函数
     df_analytical = get_analytical_derivative()
-    # TODO: 计算中心差分导数
+
+    # 计算中心差分导数
     x_central = x[1:-1]
     dy_central = calculate_central_difference(x, f)
-    # TODO: 计算Richardson外推导数
+
+    # 计算Richardson外推导数
     dy_richardson = richardson_derivative_all_orders(x[0], f, h)
 
-    # TODO: 绘制结果对比图
+    # 绘制结果对比图
     create_comparison_plot(x, x_central, dy_central, dy_richardson, df_analytical)
+
 
 if __name__ == '__main__':
     main()
